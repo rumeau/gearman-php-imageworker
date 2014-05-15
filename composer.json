@@ -1,0 +1,6 @@
+{
+    "require": {
+        "aws/aws-sdk-php": "2.*",
+        "symfony/class-loader": "2.4.*"
+    }
+}

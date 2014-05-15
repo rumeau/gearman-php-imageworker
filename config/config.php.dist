@@ -1,0 +1,19 @@
+<?php
+return array(
+    'imageserver' => array(
+        'storage' => array(
+            'type' => 's3', // s3 | local, etc only s3 implemented so far
+            'options' => array(
+                'bucket' => '<bucket>',
+                'ssl'    => true,
+                'region' => 'sa-east-1',
+                'bucket_namespace' => '<bucket_namespace>',
+                'owner'  => '<owner>',
+            ),
+        ),
+        'manipulation' => array(
+            'type' => 'gmagick',
+            'options' => array()
+        )
+    ),
+);
