@@ -97,7 +97,7 @@ class Application
                 unset($size['task']);
             }
             $childTask = 'processMethod' . ucfirst($childTask);
-            $image = call_user_method_array($childTask, $this->imageManipulator, $size);
+            $image = call_user_func_array(array($this->imageManipulator, $childTask), $size);
 
             // Save new thumbnail on a temporary file
             $tmpFileInfo = pathinfo($fileName->tmpName);

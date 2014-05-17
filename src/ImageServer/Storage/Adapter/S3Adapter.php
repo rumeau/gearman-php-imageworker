@@ -43,6 +43,7 @@ class S3Adapter extends AbstractAdapter
                 'Key'    => $file,
                 'SaveAs' => $tmpFile
             ));
+            echo '[DEBUG] ' . $result['Body']->getUri() . PHP_EOL;
         } catch (\Exception $e) {
             unlink($tmpFile);
             throw new \Exception('File "' . $file . '" could not be downloaded with message: ' . $e->getMessage());
