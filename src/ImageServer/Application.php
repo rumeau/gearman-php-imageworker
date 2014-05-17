@@ -4,6 +4,7 @@ namespace ImageServer;
 use RuntimeException;
 use InvalidArgumentException;
 use BadMethodCallException;
+use GearmanJob;
 
 class Application
 {
@@ -24,30 +25,43 @@ class Application
         $this->config = $config;
     }
 
+    /**
+     * Process the job
+     *
+     * @param GearmanJob $job
+     */
     public function run($job)
     {
         $json = $job->workload();
-        $data = json_decode($json);
+        $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new InvalidArgumentException('The json data received is not valid');
+            $job->sendException('The json data received is not valid');
+            exit(GEARMAN_WORK_FAIL);
         }
 
         $this->validateParams($data);
 
         // TODO Filter $data params
         $fileName = $this->storageAdapter->getFile($data['filename']);
-        $image = $this->imageManipulator->loadImage($fileName->tempName);
+        $image = $this->imageManipulator->loadImage($fileName->tmpName);
         if (!$image instanceof Gmagick) {
-            throw new RuntimeException('The worker was unable to generate a valid image resource to process');
+            $job->sendException('The worker was unable to generate a valid image resource to process');
+            exit(GEARMAN_WORK_FAIL);
         }
 
         $task = 'processMethod' . ucfirst($data['task']);
         if (!method_exists($this->imageManipulator, $task)) {
-            throw new BadMethodCallException('The image manipulator does not have a method "' . $data['task'] . '"');
+            $job->sendException('The image manipulator does not have a method "' . $data['task'] . '"');
+            exit(GEARMAN_WORK_FAIL);
         }
 
-        $this->processData($image, $data, $fileName);
+        $error = $this->processData($image, $data, $fileName);
+        if ($error) {
+            $job->sendException($error);
+            exit(GEARMAN_WORK_FAIL);
+        }
 
+        return true;
     }
 
     /**
@@ -60,6 +74,10 @@ class Application
     protected function processData($image, $data, $fileName)
     {
         $name = $fileName->name;
+        $meta = $fileName->meta;
+        $contentType = $fileName->contenttype;
+        $files = array();
+        $temporalFiles = array();
         foreach ($data['sizes'] as $suffix => $size) {
             $newName = $this->formatNewName($name, $suffix);
 
@@ -70,7 +88,34 @@ class Application
             }
             $childTask = 'processMethod' . ucfirst($childTask);
             $image = call_user_method_array($childTask, $this->imageManipulator, $size);
+
+            // Save new thumbnail on a temporary file
+            $tmpFileInfo = pathinfo($fileName->tmpName);
+            $newTmpFile = $tmpFileInfo['dirname'] . DIRECTORY_SEPARATOR . $suffix . '_' . $tmpFileInfo['basename'];
+
+            // Add thumbnail to upload queue
+            $files[] = array(
+                'source' => $newTmpFile,
+                'destination' => $newName,
+                'content_type' => $contentType,
+                'meta' => $meta
+            );
+            $temporalFiles[] = $newTmpFile;
         }
+
+        try {
+            $this->storageAdapter->putFiles($files);
+            unlink($fileName->tmpName);
+        } catch (\Exception $e) {
+            foreach ($temporalFiles as $toRemove) {
+                unlink($toRemove);
+            }
+            unlink($fileName->tmpName);
+            return $e->getMessage();
+        }
+
+        // No errors
+        return false;
     }
 
     protected function prepareServices()
@@ -82,43 +127,63 @@ class Application
         $class = sprintf($classTmpl, ucfirst($storageType));
 
         if (!class_exists($class)) {
-            throw new RuntimeException('The adapter of type "' . $class . '" does not exists');
+            $job->sendException('The adapter of type "' . $class . '" does not exists');
+            exit(GEARMAN_WORK_FAIL);
         }
-        $this->storageAdapter = new $class($storageOptions);
+
+        try {
+            $this->storageAdapter = new $class($storageOptions);
+        } catch (\Exception $e) {
+            $this->sendException($e->getMessage());
+            exit(GEARMAN_WORK_FAIL);
+        }
 
         $manipulatorType = $imageServerConfig['manipulation']['type'];
         $manipulatorOptions = isset($imageServerConfig['manipulation']['options']) ? $imageServerConfig['manipulation']['options'] : array();
         $classTmpl = 'ImageServer\ImageManipulator\%sManipulator';
         $class = sprintf($classTmpl, ucfirst($manipulatorType));
         if (!class_exists($class)) {
-            throw new RuntimeException('The manipulator of type "' . $class . '" does not exists');
+            $job->sendException('The manipulator of type "' . $class . '" does not exists');
+            exit(GEARMAN_WORK_FAIL);
         }
-        $this->imageManipulator = new $class($manipulatorOptions);
+
+        try {
+            $this->imageManipulator = new $class($manipulatorOptions);
+        } catch (\Exception $e) {
+            $job->sendException($e->getMessage());
+            exit(GEARMAN_WORK_FAIL);
+        }
     }
 
     protected function validateParams($params)
     {
         if (!isset($params['filename'])) {
-            throw new BadMethodCallException('You must provide a filename to process');
+            $job->sendException('You must provide a filename to process');
+            exit(GEARMAN_WORK_FAIL);
         }
 
         if (!isset($params['task'])) {
-            throw new BadMethodCallException('The data submitted must include a default task for the image manipulator');
+            $job->sendException('The data submitted must include a default task for the image manipulator');
+            exit(GEARMAN_WORK_FAIL);
         } elseif (!method_exists($this->imageManipulator, 'processMethod' . ucfirst($params['task']))) {
-            throw new BadMethodCallException('The task provided is not a valid task for the manipulator');
+            $job->sendException('The task provided is not a valid task for the manipulator');
+            exit(GEARMAN_WORK_FAIL);
         }
 
         if (!isset($params['sizes']) || !count($params['sizes'])) {
-            throw new BadMethodCallException('You must define at least one image size to process');
+            $job->sendException('You must define at least one image size to process');
+            exit(GEARMAN_WORK_FAIL);
         }
 
         foreach ($params['sizes'] as $key => $size) {
             if (!is_string($key)) {
-                throw new BadMethodCallException('Size key must be a string');
+                $job->sendException('Size key must be a string');
+                exit(GEARMAN_WORK_FAIL);
             }
 
             if (isset($size['task']) && !method_exists($this->imageManipulator, 'processMethod' . ucfirst($size['task']))) {
-                throw new BadMethodCallException('The task provided is not a valid task for the manipulator');
+                $job->sendException('The task provided is not a valid task for the manipulator');
+                exit(GEARMAN_WORK_FAIL);
             }
         }
     }

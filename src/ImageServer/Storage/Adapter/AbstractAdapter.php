@@ -22,7 +22,7 @@ abstract class AbstractAdapter
 
     }
 
-    public function putFile($file, $destination)
+    public function putFiles($files = array())
     {
 
     }
