@@ -23,6 +23,11 @@ class GmagickManipulator
         return $this;
     }
 
+    public function getImage()
+    {
+        return $this->gmagick;
+    }
+
     public function processMethodResize($width, $height, $fit = true)
     {
         $this->gmagick->thumbnailimage($width, $height, $fit);

@@ -54,7 +54,7 @@ class Application
         }
 
         $image = $this->imageManipulator->loadImage($fileName->tmpName);
-        if (!$image instanceof Gmagick) {
+        if (!is_object($image->getImage())) {
             echo 'The worker was unable to generate a valid image resource to process' . PHP_EOL;
             exit(GEARMAN_WORK_FAIL);
         }
