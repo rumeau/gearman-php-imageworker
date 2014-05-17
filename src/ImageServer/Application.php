@@ -88,6 +88,7 @@ class Application
         $contentType = $fileName->contenttype;
         $files = array();
         $temporalFiles = array();
+        echo '[DEBUG] ' . count($data['sizes']) . ' Sizes to create';
         foreach ($data['sizes'] as $suffix => $size) {
             $newName = $this->formatNewName($name, $suffix);
 
@@ -110,6 +111,7 @@ class Application
                 'content_type' => $contentType,
                 'meta' => $meta
             );
+            echo '[DEBUG] Created image with options: ' . serialize($size);
             $temporalFiles[] = $newTmpFile;
         }
 

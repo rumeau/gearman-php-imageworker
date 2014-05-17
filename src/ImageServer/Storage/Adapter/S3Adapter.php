@@ -33,7 +33,8 @@ class S3Adapter extends AbstractAdapter
     {
         $bucket  = $this->config['bucket'];
         $tmpDir  = isset($this->config['tmp_dir']);
-        $tmpFile = tempnam($tmpDir, 'imgs-s3');
+        echo '[DEBUG] Temp dir is: ' . $tmpDir;
+        $tmpFile = tempnam($tmpDir, 'imgs-s3-');
         //unlink($tmpFile);
         $result  = array();
         
