@@ -37,15 +37,15 @@ class S3Adapter extends AbstractAdapter
         unlink($tmpFile);
         $result  = array();
         
-        $result = $this->s3Client->getObject(array(
-            'Bucket' => $bucket,
-            'Key'    => $file,
-            'SaveAs' => $tmpFile
-        ));
-
-        if (!is_array($result) || !isset($result['Body'])) {
+        try {
+            $result = $this->s3Client->getObject(array(
+                'Bucket' => $bucket,
+                'Key'    => $file,
+                'SaveAs' => $tmpFile
+            ));
+        } catch (\Exception $e) {
             unlink($tmpFile);
-            throw new \Exception('File "' . $file . '" could not be downloaded');
+            throw new \Exception('File "' . $file . '" could not be downloaded with message: ' . $e->getMessage());
         }
 
         $object = new stdClass();
