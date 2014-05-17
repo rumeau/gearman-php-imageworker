@@ -127,32 +127,20 @@ class Application
         $class = sprintf($classTmpl, ucfirst($storageType));
 
         if (!class_exists($class)) {
-            $job->sendException('The adapter of type "' . $class . '" does not exists');
-            exit(GEARMAN_WORK_FAIL);
+            throw new RuntimeException('The adapter of type "' . $class . '" does not exists');
         }
 
-        try {
-            $this->storageAdapter = new $class($storageOptions);
-        } catch (\Exception $e) {
-            $this->sendException($e->getMessage());
-            exit(GEARMAN_WORK_FAIL);
-        }
+        $this->storageAdapter = new $class($storageOptions);
 
         $manipulatorType = $imageServerConfig['manipulation']['type'];
         $manipulatorOptions = isset($imageServerConfig['manipulation']['options']) ? $imageServerConfig['manipulation']['options'] : array();
         $classTmpl = 'ImageServer\ImageManipulator\%sManipulator';
         $class = sprintf($classTmpl, ucfirst($manipulatorType));
         if (!class_exists($class)) {
-            $job->sendException('The manipulator of type "' . $class . '" does not exists');
-            exit(GEARMAN_WORK_FAIL);
+            throw new RuntimeException('The manipulator of type "' . $class . '" does not exists');
         }
 
-        try {
-            $this->imageManipulator = new $class($manipulatorOptions);
-        } catch (\Exception $e) {
-            $job->sendException($e->getMessage());
-            exit(GEARMAN_WORK_FAIL);
-        }
+        $this->imageManipulator = new $class($manipulatorOptions);
     }
 
     protected function validateParams($params)
