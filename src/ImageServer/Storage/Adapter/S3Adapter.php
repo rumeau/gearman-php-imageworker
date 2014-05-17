@@ -34,7 +34,7 @@ class S3Adapter extends AbstractAdapter
         $bucket  = $this->config['bucket'];
         $tmpDir  = isset($this->config['tmp_dir']);
         $tmpFile = tempnam($tmpDir, 'imgs-s3');
-        unlink($tmpFile);
+        //unlink($tmpFile);
         $result  = array();
         
         try {
@@ -48,7 +48,7 @@ class S3Adapter extends AbstractAdapter
             throw new \Exception('File "' . $file . '" could not be downloaded with message: ' . $e->getMessage());
         }
 
-        $object = new stdClass();
+        $object = new \stdClass();
         $object->tmpName = $tmpFile;
         $object->name = $file;
         $object->meta = $result['Metadata'];
