@@ -35,13 +35,13 @@ class Application
         $json = $job->workload();
         $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $job->sendException('The json data received is not valid');
+            echo 'The json data received is not valid';
             exit(GEARMAN_WORK_FAIL);
         }
 
         $error = $this->validateParams($data);
         if ($error) {
-            $job->sendException($error);
+            echo $error;
             exit(GEARMAN_WORK_FAIL);
         }
 
@@ -49,19 +49,19 @@ class Application
         $fileName = $this->storageAdapter->getFile($data['filename']);
         $image = $this->imageManipulator->loadImage($fileName->tmpName);
         if (!$image instanceof Gmagick) {
-            $job->sendException('The worker was unable to generate a valid image resource to process');
+            echo 'The worker was unable to generate a valid image resource to process';
             exit(GEARMAN_WORK_FAIL);
         }
 
         $task = 'processMethod' . ucfirst($data['task']);
         if (!method_exists($this->imageManipulator, $task)) {
-            $job->sendException('The image manipulator does not have a method "' . $data['task'] . '"');
+            echo 'The image manipulator does not have a method "' . $data['task'] . '"';
             exit(GEARMAN_WORK_FAIL);
         }
 
         $error = $this->processData($image, $data, $fileName);
         if ($error) {
-            $job->sendException($error);
+            echo $error;
             exit(GEARMAN_WORK_FAIL);
         }
 
