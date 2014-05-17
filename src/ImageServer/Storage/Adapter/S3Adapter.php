@@ -36,15 +36,12 @@ class S3Adapter extends AbstractAdapter
         $tmpFile = tempnam($tmpDir, 'imgs-s3');
         unlink($tmpFile);
         $result  = array();
-        try {
-            $result = $this->s3Client->getObject(array(
-                'Bucket' => $bucket,
-                'Key'    => $file,
-                'SaveAs' => $tmpFile
-            ));
-        } catch (\Exception $e) {
-
-        }
+        
+        $result = $this->s3Client->getObject(array(
+            'Bucket' => $bucket,
+            'Key'    => $file,
+            'SaveAs' => $tmpFile
+        ));
 
         if (!is_array($result) || !isset($result['Body'])) {
             unlink($tmpFile);

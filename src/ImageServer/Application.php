@@ -46,7 +46,13 @@ class Application
         }
 
         // TODO Filter $data params
-        $fileName = $this->storageAdapter->getFile($data['filename']);
+        try {
+            $fileName = $this->storageAdapter->getFile($data['filename']);
+        } catch (\Exception $e) {
+            echo $e->getMessage() . PHP_EOL;
+            exit(GEARMAN_WORK_FAIL);
+        }
+
         $image = $this->imageManipulator->loadImage($fileName->tmpName);
         if (!$image instanceof Gmagick) {
             echo 'The worker was unable to generate a valid image resource to process' . PHP_EOL;
