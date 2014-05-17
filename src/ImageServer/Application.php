@@ -39,7 +39,11 @@ class Application
             exit(GEARMAN_WORK_FAIL);
         }
 
-        $this->validateParams($data);
+        $error = $this->validateParams($data);
+        if ($error) {
+            $job->sendException($error);
+            exit(GEARMAN_WORK_FAIL);
+        }
 
         // TODO Filter $data params
         $fileName = $this->storageAdapter->getFile($data['filename']);
@@ -146,32 +150,26 @@ class Application
     protected function validateParams($params)
     {
         if (!isset($params['filename'])) {
-            $job->sendException('You must provide a filename to process');
-            exit(GEARMAN_WORK_FAIL);
+            return 'You must provide a filename to process';
         }
 
         if (!isset($params['task'])) {
-            $job->sendException('The data submitted must include a default task for the image manipulator');
-            exit(GEARMAN_WORK_FAIL);
+            return 'The data submitted must include a default task for the image manipulator';
         } elseif (!method_exists($this->imageManipulator, 'processMethod' . ucfirst($params['task']))) {
-            $job->sendException('The task provided is not a valid task for the manipulator');
-            exit(GEARMAN_WORK_FAIL);
+            return 'The task provided is not a valid task for the manipulator';
         }
 
         if (!isset($params['sizes']) || !count($params['sizes'])) {
-            $job->sendException('You must define at least one image size to process');
-            exit(GEARMAN_WORK_FAIL);
+            return 'You must define at least one image size to process';
         }
 
         foreach ($params['sizes'] as $key => $size) {
             if (!is_string($key)) {
-                $job->sendException('Size key must be a string');
-                exit(GEARMAN_WORK_FAIL);
+                return 'Size key must be a string';
             }
 
             if (isset($size['task']) && !method_exists($this->imageManipulator, 'processMethod' . ucfirst($size['task']))) {
-                $job->sendException('The task provided is not a valid task for the manipulator');
-                exit(GEARMAN_WORK_FAIL);
+                return 'The task provided is not a valid task for the manipulator';
             }
         }
     }
