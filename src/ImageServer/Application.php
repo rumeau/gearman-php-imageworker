@@ -14,18 +14,18 @@ class Application
 
     protected $imageManipulator;
 
-    protected $profile = false;
+    public static $profile = false;
 
-    protected $debug = false;
+    public static $debug = false;
 
     public function __construct($config = array())
     {
         $this->setConfig($config);
         if (isset($this->config['debug']) && $this->config['debug'] === true) {
-            $this->debug = true;
+            static::$debug = true;
         }
         if (isset($this->config['profile']) && $this->config['profile'] === true) {
-            $this->profile = true;
+            static::$profile = true;
         }
         $this->prepareServices();
     }
@@ -228,7 +228,7 @@ class Application
 
     public static function debug($msg)
     {
-        if (!$this->debug) {
+        if (!static::$debug) {
             return;
         }
         echo $msg . PHP_EOL;
@@ -236,7 +236,7 @@ class Application
 
     protected function startProfiling()
     {
-        if (!$this->profile) {
+        if (!static::$profile) {
             return;
         }
 
@@ -252,7 +252,7 @@ class Application
 
     protected function endProfiling($starttime)
     {
-        if (!$this->profile) {
+        if (!static::$profile) {
             return;
         }
 
