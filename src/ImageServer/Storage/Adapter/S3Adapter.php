@@ -65,7 +65,7 @@ class S3Adapter extends AbstractAdapter
      *
      * @param array Filename => Destination key pair
      */
-    public function putFile($files = array())
+    public function putFiles($files = array())
     {
         self::debug(count($files) . ' files in queue to upload');
         $bucket = $this->config['bucket'];
