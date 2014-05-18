@@ -1,6 +1,6 @@
 <?php
+define('DEBUG_MODE', 0);
 return array(
-    'debug' => false,
     'imageserver' => array(
         'storage' => array(
             'type' => 's3', // s3 | local, etc only s3 implemented so far

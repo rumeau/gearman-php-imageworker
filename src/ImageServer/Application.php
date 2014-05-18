@@ -14,14 +14,9 @@ class Application
 
     protected $imageManipulator;
 
-    public static $debug = false;
-
     public function __construct($config = array())
     {
         $this->setConfig($config);
-        if (isset($this->config['debug']) && $this->config['debug'] === true) {
-            static::$debug = true;
-        }
         $this->prepareServices();
     }
 
@@ -201,7 +196,7 @@ class Application
 
     public static function debug($msg)
     {
-        if ($this->debug) {
+        if (defined('DEBUG_MODE') && DEBUG_MODE === 1) {
             echo $msg . PHP_EOL;
         }
     }
