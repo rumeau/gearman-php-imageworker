@@ -1,8 +1,4 @@
 <?php
-
-$cwd = getcwd();
-chdir(dirname(__DIR__));
-
 require 'vendor/autoload.php';
 
 use Symfony\Component\ClassLoader\UniversalClassLoader;
