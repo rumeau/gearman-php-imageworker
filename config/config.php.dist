@@ -9,7 +9,7 @@ return array(
                 'region' => 'sa-east-1',
                 'bucket_namespace' => '<bucket_namespace>',
                 'owner'  => '<owner>',
-                'tmp_dir' => realpath(__DIR__ . '/../tmp')
+                'tmp_dir' => '/tmp'
             ),
         ),
         'manipulation' => array(
