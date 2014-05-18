@@ -35,13 +35,13 @@ class Application
         $json = $job->workload();
         $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            echo 'The json data received is not valid' . PHP_EOL;
+            selft::debug('The json data received is not valid');
             exit(GEARMAN_WORK_FAIL);
         }
 
         $error = $this->validateParams($data);
         if ($error) {
-            echo $error . PHP_EOL;
+            selft::debug($error);
             exit(GEARMAN_WORK_FAIL);
         }
 
@@ -49,25 +49,25 @@ class Application
         try {
             $fileName = $this->storageAdapter->getFile($data['filename']);
         } catch (\Exception $e) {
-            echo $e->getMessage() . PHP_EOL;
+            selft::debug($e->getMessage());
             exit(GEARMAN_WORK_FAIL);
         }
 
         $image = $this->imageManipulator->loadImage($fileName->tmpName);
         if (!is_object($image->getImage())) {
-            echo 'The worker was unable to generate a valid image resource to process' . PHP_EOL;
+            selft::debug('The worker was unable to generate a valid image resource to process');
             exit(GEARMAN_WORK_FAIL);
         }
 
         $task = 'processMethod' . ucfirst($data['task']);
         if (!method_exists($this->imageManipulator, $task)) {
-            echo 'The image manipulator does not have a method "' . $data['task'] . '"' . PHP_EOL;
+            selft::debug('The image manipulator does not have a method "' . $data['task'] . '"');
             exit(GEARMAN_WORK_FAIL);
         }
 
         $error = $this->processData($image, $data, $fileName);
         if ($error) {
-            echo $error . PHP_EOL;
+            selft::debug($error);
             exit(GEARMAN_WORK_FAIL);
         }
 
@@ -113,16 +113,22 @@ class Application
                 'meta' => $meta
             );
             $temporalFiles[] = $newTmpFile;
-            $this->debug('Creating image with task: ' . $childTask . ' and added to queue');
+            selft::debug('Creating image with task: ' . $childTask . ' and added to queue');
         }
 
         try {
+            selft::debug('--- Initializing upload ---');
             $this->storageAdapter->putFiles($files);
+            selft::debug('Done Uploading!');
+            selft::debug('-> Removing temp file');
             unlink($fileName->tmpName);
         } catch (\Exception $e) {
+            selft::debug('Remove previous files in this task');
             foreach ($temporalFiles as $toRemove) {
                 unlink($toRemove);
+                selft::debug('Removed file: ' . $toRemove);
             }
+            selft::debug('-> Removing temp file');
             unlink($fileName->tmpName);
             return $e->getMessage();
         }
