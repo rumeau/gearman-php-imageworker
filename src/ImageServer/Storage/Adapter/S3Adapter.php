@@ -67,6 +67,7 @@ class S3Adapter extends AbstractAdapter
      */
     public function putFile($files = array())
     {
+        Application::debug(count($files) . ' files in queue to upload');
         $bucket = $this->config['bucket'];
 
         if (isset($this->config['owner']) && !empty($this->config['owner'])) {
@@ -80,6 +81,7 @@ class S3Adapter extends AbstractAdapter
         $keys = array();
         $error = '';
         foreach ($files as $file) {
+            Application::debug('[LINE:' . __LINE__ . '] Uploading file to key: ' . $bucket . '/' . $file['destination']);
             $info = array(
                 'Bucket'     => $bucket,
                 'Key'        => $file['destination'],
@@ -96,9 +98,12 @@ class S3Adapter extends AbstractAdapter
 
             $result = $this->s3Client->putObject($info);
             if (isset($result['ETag'])) {
+                Application::debug('[LINE:' . __LINE__ . '] File with ETag: ' . $result['ETag'] . ' stored on S3');
                 $keys[]['Key'] = $file['destination'];
             } else {
+                Application::debug('[LINE:' . __LINE__ . '] ERROR Failed to upload ' . $file['destination']);
                 if (count($keys)) {
+                    Application::debug('[LINE:' . __LINE__ . '] Removing previously uploaded files');
                     $this->s3Client->deleteObjects(array(
                         'Bucket' => $bucket,
                         'Objects'=> $keys

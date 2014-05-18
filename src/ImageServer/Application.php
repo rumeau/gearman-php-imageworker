@@ -112,8 +112,8 @@ class Application
                 'content_type' => $contentType,
                 'meta' => $meta
             );
-            $this->debug('Creating image with task: ' . $childTask);
             $temporalFiles[] = $newTmpFile;
+            $this->debug('Creating image with task: ' . $childTask . ' and added to queue');
         }
 
         try {
