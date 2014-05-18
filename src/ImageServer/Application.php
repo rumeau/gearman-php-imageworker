@@ -14,9 +14,19 @@ class Application
 
     protected $imageManipulator;
 
+    protected $profile = false;
+
+    protected $debug = false;
+
     public function __construct($config = array())
     {
         $this->setConfig($config);
+        if (isset($this->config['debug']) && $this->config['debug'] === true) {
+            $this->debug = true;
+        }
+        if (isset($this->config['profile']) && $this->config['profile'] === true) {
+            $this->profile = true;
+        }
         $this->prepareServices();
     }
 
@@ -32,6 +42,8 @@ class Application
      */
     public function run($job)
     {
+        $start = $this->startProfiling();
+
         $json = $job->workload();
         $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -71,6 +83,20 @@ class Application
             exit(GEARMAN_WORK_FAIL);
         }
 
+        global $profile, $starttime;
+        if ($profile) {
+            echo 'END MEMORY: ' . memory_get_usage() . PHP_EOL;
+            echo 'PEAK MEMORY: ' . memory_get_peak_usage(true) . PHP_EOL;
+
+            $mtime = microtime();
+            $mtime = explode(" ", $mtime);
+            $mtime = $mtime[1] + $mtime[0];
+            $endtime = $mtime;
+            $totaltime = ($endtime - $starttime);
+            echo 'JOB EXECUTED IN ' . $totaltime . ' SECONDS' . PHP_EOL;
+        }
+
+        $this->endProfiling($start);
         return true;
     }
 
@@ -202,8 +228,42 @@ class Application
 
     public static function debug($msg)
     {
-        if (defined('DEBUG_MODE') && DEBUG_MODE === 1) {
-            echo $msg . PHP_EOL;
+        if (!$this->debug) {
+            return;
         }
+        echo $msg . PHP_EOL;
+    }
+
+    protected function startProfiling()
+    {
+        if (!$this->profile) {
+            return;
+        }
+
+        $mtime = microtime();
+        $mtime = explode(" ", $mtime);
+        $mtime = $mtime[1] + $mtime[0];
+        $starttime = $mtime;
+
+        echo '[PROFILE] START MEMORY: ' . memory_get_usage() . PHP_EOL;
+
+        return $starttime;
+    }
+
+    protected function endProfiling($starttime)
+    {
+        if (!$this->profile) {
+            return;
+        }
+
+        echo '[PROFILE] END MEMORY: ' . memory_get_usage() . PHP_EOL;
+        echo '[PROFILE] PEAK MEMORY: ' . memory_get_peak_usage(true) . PHP_EOL;
+
+        $mtime = microtime();
+        $mtime = explode(" ", $mtime);
+        $mtime = $mtime[1] + $mtime[0];
+        $endtime = $mtime;
+        $totaltime = ($endtime - $starttime);
+        echo '[PROFILE] JOB EXECUTED IN ' . $totaltime . ' SECONDS' . PHP_EOL;
     }
 }
