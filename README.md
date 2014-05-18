@@ -46,6 +46,7 @@ $ cp config/config.php.dist config/config.php
 (optional) # cp config/aws.php.dist config/aws.php
 // Edit both files accordingly
 $ chmod 777 log/ tmp/
+$ composer install
 ```
 
 Once completed you can test the worker
