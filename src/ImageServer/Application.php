@@ -14,9 +14,14 @@ class Application
 
     protected $imageManipulator;
 
+    public static $debug = false;
+
     public function __construct($config = array())
     {
         $this->setConfig($config);
+        if (isset($this->config['debug']) && $this->config['debug'] === true) {
+            static::$debug = true;
+        }
         $this->prepareServices();
     }
 
@@ -88,7 +93,7 @@ class Application
         $contentType = $fileName->contenttype;
         $files = array();
         $temporalFiles = array();
-        echo '[DEBUG] ' . count($data['sizes']) . ' Sizes to create';
+        $this->debug(count($data['sizes']) . ' Sizes to create');
         foreach ($data['sizes'] as $suffix => $size) {
             $newName = $this->formatNewName($name, $suffix);
 
@@ -103,6 +108,7 @@ class Application
             // Save new thumbnail on a temporary file
             $tmpFileInfo = pathinfo($fileName->tmpName);
             $newTmpFile = $tmpFileInfo['dirname'] . DIRECTORY_SEPARATOR . $suffix . '_' . $tmpFileInfo['basename'];
+            $image->writeimage($newTmpFile);
 
             // Add thumbnail to upload queue
             $files[] = array(
@@ -111,7 +117,7 @@ class Application
                 'content_type' => $contentType,
                 'meta' => $meta
             );
-            echo '[DEBUG] Created image with options: ' . serialize($size);
+            $this->debug('Creating image with task: ' . $childTask);
             $temporalFiles[] = $newTmpFile;
         }
 
@@ -191,5 +197,12 @@ class Application
         }
 
         return $newTarget;
+    }
+
+    public static function debug($msg)
+    {
+        if ($this->debug) {
+            echo $msg . PHP_EOL;
+        }
     }
 }

@@ -3,6 +3,7 @@ namespace ImageServer\Storage\Adapter;
 
 use Aws\Common\Aws;
 use Aws\S3\Model\AcpBuilder;
+use ImageServer\Application;
 
 class S3Adapter extends AbstractAdapter
 {
@@ -33,7 +34,7 @@ class S3Adapter extends AbstractAdapter
     {
         $bucket  = $this->config['bucket'];
         $tmpDir  = isset($this->config['tmp_dir']) ? $this->config['tmp_dir'] : sys_get_temp_dir();
-        echo '[DEBUG] Temp dir is: ' . $tmpDir;
+        Application::debug('Temp dir is: ' . $tmpDir);
         $tmpFile = tempnam($tmpDir, 'imgs-s3-');
         //unlink($tmpFile);
         $result  = array();
@@ -44,7 +45,7 @@ class S3Adapter extends AbstractAdapter
                 'Key'    => $file,
                 'SaveAs' => $tmpFile
             ));
-            echo '[DEBUG] ' . $result['Body']->getUri() . PHP_EOL;
+            Application::debug('Fetched object to location: ' . $result['Body']->getUri());
         } catch (\Exception $e) {
             unlink($tmpFile);
             throw new \Exception('File "' . $file . '" could not be downloaded with message: ' . $e->getMessage());
