@@ -137,7 +137,7 @@ class S3Adapter extends AbstractAdapter
      */
     protected function createAwsService()
     {
-        $this->aws = Aws::factory(include 'config/aws.php');
+        $this->aws = Aws::factory('config/aws.php');
     }
 
     /**
