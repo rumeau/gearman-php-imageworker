@@ -68,7 +68,7 @@ class S3Adapter extends AbstractAdapter
     public function putFiles($files = array())
     {
         self::debug(count($files) . ' files in queue to upload');
-        $bucket = $this->config['bucket'];
+        $bucket = $this->getBucket();
 
         if (isset($this->config['owner']) && !empty($this->config['owner'])) {
             $acpBuilder = AcpBuilder::newInstance();
@@ -118,6 +118,18 @@ class S3Adapter extends AbstractAdapter
         }
 
         return true;
+    }
+
+    public function setBucket($bucket)
+    {
+        $this->config['bucket'] = $bucket;
+
+        return $this;
+    }
+
+    public function getBucket()
+    {
+        return $this->config['bucket'];
     }
 
     /**

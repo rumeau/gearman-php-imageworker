@@ -57,6 +57,15 @@ class Application
             exit(GEARMAN_WORK_FAIL);
         }
 
+        if (isset($data['storage_options'])) {
+            foreach ($data['storage_options'] as $so => $args) {
+                $method = 'set' . ucfirst($so);
+                if (method_exists($this->storageAdapter, $method)) {
+                    call_user_func_array(array($this->storageAdapter, $method), $args);
+                }
+            }
+        }
+
         // TODO Filter $data params
         try {
             $fileName = $this->storageAdapter->getFile($data['filename']);
