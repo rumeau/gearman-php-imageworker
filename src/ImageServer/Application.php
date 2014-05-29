@@ -142,6 +142,7 @@ class Application
             $tmpFileInfo = pathinfo($fileName->tmpName);
             $newTmpFile = $tmpFileInfo['dirname'] . DIRECTORY_SEPARATOR . $suffix . '_' . $tmpFileInfo['basename'];
             $image->writeimage($newTmpFile);
+            $image->destroy();
 
             // Add thumbnail to upload queue
             $files[] = array(
@@ -159,7 +160,11 @@ class Application
             $this->storageAdapter->putFiles($files);
             self::debug('Done Uploading!');
             self::debug('-> Removing temp file');
-            unlink($fileName->tmpName);
+            foreach ($temporalFiles as $toRemove) {
+                unlink($fileName->tmpName);
+                self::debug('Removed file: ' . $toRemove);
+            }
+            $this->imageManipulator->getImage()->destroy();
         } catch (\Exception $e) {
             self::debug('Remove previous files in this task');
             foreach ($temporalFiles as $toRemove) {
@@ -168,6 +173,7 @@ class Application
             }
             self::debug('-> Removing temp file');
             unlink($fileName->tmpName);
+            $this->imageManipulator->getImage()->destroy();
             return $e->getMessage();
         }
 

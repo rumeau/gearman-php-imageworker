@@ -30,7 +30,8 @@ class GmagickManipulator
 
     public function processMethodResize($width, $height, $fit = true)
     {
-        $this->gmagick->thumbnailimage($width, $height, $fit);
-        return $this->gmagick;
+        $imageToProcess = clone $this->gmagick;
+        $imageToProcess->thumbnailimage($width, $height, $fit);
+        return $imageToProcess;
     }
 }
