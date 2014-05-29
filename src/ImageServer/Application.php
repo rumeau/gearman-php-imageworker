@@ -161,7 +161,7 @@ class Application
             self::debug('Done Uploading!');
             self::debug('-> Removing temp file');
             foreach ($temporalFiles as $toRemove) {
-                unlink($fileName->tmpName);
+                unlink($toRemove);
                 self::debug('Removed file: ' . $toRemove);
             }
             $this->imageManipulator->getImage()->destroy();
