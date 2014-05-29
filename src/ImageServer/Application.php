@@ -164,6 +164,7 @@ class Application
                 unlink($toRemove);
                 self::debug('Removed file: ' . $toRemove);
             }
+            unlink($fileName->tmpName);
             $this->imageManipulator->getImage()->destroy();
         } catch (\Exception $e) {
             self::debug('Remove previous files in this task');
