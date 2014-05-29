@@ -240,10 +240,9 @@ class Application
 
     public static function debug($msg)
     {
-        if (!static::$debug) {
-            return;
+        if (defined('DEBUG_MODE') && DEBUG_MODE === 1) {
+            echo $msg . PHP_EOL;
         }
-        echo $msg . PHP_EOL;
     }
 
     protected function startProfiling()
