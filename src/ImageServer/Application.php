@@ -60,6 +60,9 @@ class Application
         if (isset($data['storage_options'])) {
             foreach ($data['storage_options'] as $so => $args) {
                 $method = 'set' . ucfirst($so);
+                if (!is_array($args)) {
+                    $args = array($args);
+                }
                 if (method_exists($this->storageAdapter, $method)) {
                     call_user_func_array(array($this->storageAdapter, $method), $args);
                 }
