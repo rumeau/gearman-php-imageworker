@@ -122,7 +122,7 @@ $ tar xzf gearmand-1.1.12.tar.gz
 $ cd gearmand-1.1.12
 $ ./configure
 $ make
-$ sudo install
+$ sudo make install
 ```
     
 **Configuring upstart script**
